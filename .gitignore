@@ -6,3 +6,4 @@
 /resumen
 build/
 /*.dat
+.claude/
