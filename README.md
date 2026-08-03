@@ -19,13 +19,17 @@ cómo resolverlo con lo que vimos de archivos.
 │   ├── comandas_historicas.dat
 │   ├── inventario.dat
 │   └── dump_datos_de_prueba.txt   # los dos .dat en texto, para verificar la lectura
-├── src/                       # sus 4 programas (empiezan como stubs con TODO)
-│   ├── normalizacion.cpp
-│   ├── ventas.cpp
-│   ├── cierre.cpp
-│   └── resumen.cpp
-└── .gitignore
+├── .gitignore
+│
+│   # --- estos los crean USTEDES (no vienen en el repo base) ---
+├── normalizacion.cpp          # cada uno con su propio main; NO hay main.cpp
+├── ventas.cpp
+├── cierre.cpp
+└── resumen.cpp
 ```
+
+Los 4 programas los escriben ustedes desde cero: el repo base no trae código.
+Créenlos en la raíz del repo (como en el diagrama del enunciado).
 
 ## Cómo trabajar
 
@@ -40,10 +44,10 @@ cp datos/comandas_historicas.dat datos/inventario.dat .
 Compilar y correr cada programa (cada uno tiene su propio `main`, no hay `main.cpp`):
 
 ```bash
-g++ -O2 -o normalizacion src/normalizacion.cpp
-g++ -O2 -o ventas        src/ventas.cpp
-g++ -O2 -o cierre         src/cierre.cpp
-g++ -O2 -o resumen        src/resumen.cpp
+g++ -O2 -o normalizacion normalizacion.cpp
+g++ -O2 -o ventas        ventas.cpp
+g++ -O2 -o cierre        cierre.cpp
+g++ -O2 -o resumen       resumen.cpp
 ```
 
 Orden de ejecución (cada programa deja los archivos que usa el siguiente):
@@ -64,11 +68,14 @@ en texto legible. Si tu programa imprime otra cosa al leerlos, revisá los `stru
 
 ## Qué se entrega
 
-- Este mismo repo (uno por grupo), con los **4 programas** en `src/`.
+- Este mismo repo (uno por grupo), con los **4 programas** `.cpp` en la raíz
+  (cada uno con su propio `main`, no hay `main.cpp`).
 - El **README** con el grupo, los integrantes (nombre + usuario de GitHub) y, si
   hace falta, cualquier aclaración de cómo correrlo.
-- **No** se versionan los `.dat` (ni los provistos copiados ni los generados): el
-  `.gitignore` ya los deja afuera. La cátedra corre sus programas sobre su dataset.
+- Los `.dat` de `datos/` son los **provistos por la cátedra** y ya vienen en el
+  repo: no los borren ni agreguen otros. Cualquier `.dat` que ustedes copien a la
+  raíz o generen al correr **no** se versiona (el `.gitignore` ya los deja afuera).
+  La cátedra corre sus programas sobre su propio dataset.
 - **Commits repartidos:** cada integrante tiene que tener commits propios a lo
   largo del trabajo. El historial es parte de lo que se mira para la defensa
   individual (no vale un único commit final ni que suba todo una sola persona).
