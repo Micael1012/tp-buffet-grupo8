@@ -1,21 +1,16 @@
 #include <iostream>
 #include <cstdio>
 #include <cstring>
+#include "common.h"
 
 using namespace std;
-
-struct Comanda {
-    int idMozo;
-    int codigoProducto;
-    int cantidad;
-    float comision;
-};
 
 const int MAX_COMANDAS = 1000; // ajustalo si hace falta
 
 int main() {
     Comanda todasLasComandas[MAX_COMANDAS];
     int totalComandas = 0;
+    char primeraFecha[11];
 
     int cantidadDias;
     cout << "¿Cuantos dias tiene la semana a cerrar? ";
@@ -25,6 +20,9 @@ int main() {
         char fecha[11];
         cout << "Fecha del dia " << (i + 1) << " (DD-MM-AAAA): ";
         cin >> fecha;
+        if (i == 0) {
+        strcpy(primeraFecha, fecha);   
+}
 
         char archivoDelDia[50];
         
@@ -56,6 +54,17 @@ int main() {
 }
 
     // ACÁ: armar el nombre del archivo semanal y escribirlo
+    int dia, mes, anio;
+    sscanf(primeraFecha, "%d-%d-%d", &dia, &mes, &anio);
+    int semana = (dia - 1) / 7 + 1;
+    char nombreSemanal[50];
+    sprintf(nombreSemanal, "comandas_semana_s%d-%02d.dat", semana, mes);
+    FILE* fSemanal = fopen(nombreSemanal, "wb");
+    for (int i = 0; i < totalComandas; i++) {
+    fwrite(&todasLasComandas[i], sizeof(Comanda), 1, fSemanal);
+    }
+    fclose(fSemanal);
+    cout << nombreSemanal << " generado con " << totalComandas << " comandas." << endl;
 
     cout << "Listo." << endl;
     return 0;
