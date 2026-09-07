@@ -7,6 +7,8 @@ unidad de **archivos binarios en C/C++**.
 > **Integrantes: _(nombre — usuario de GitHub, uno por línea)
   Micael Ventrici - Micael1012
   Luca Gaston Liendro Torres - Luca022
+  Santiago Luis Gamieta - Gamieta
+  Estefania Aylen Mercado Segovia - 
   ** 
 
 La consigna completa está en **`enunciado.pdf`**. Leela antes de arrancar: el
