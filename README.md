@@ -84,3 +84,10 @@ en texto legible. Si tu programa imprime otra cosa al leerlos, revisá los `stru
 - **Commits repartidos:** cada integrante tiene que tener commits propios a lo
   largo del trabajo. El historial es parte de lo que se mira para la defensa
   individual (no vale un único commit final ni que suba todo una sola persona).
+
+  ## Reparto de trabajo
+
+- **normalizacion.cpp** — Luca Gaston Liendro Torres
+- **ventas.cpp** — Estefania Aylen Mercado Segovi
+- **cierre.cpp** — Micael Ventrici Gonçalves
+- **resumen.cpp** — Santiago Luis Gamieta
