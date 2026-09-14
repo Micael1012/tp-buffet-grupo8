@@ -91,3 +91,16 @@ en texto legible. Si tu programa imprime otra cosa al leerlos, revisá los `stru
 - **ventas.cpp** — Estefania Aylen Mercado Segovi
 - **cierre.cpp** — Micael Ventrici Gonçalves
 - **resumen.cpp** — Santiago Luis Gamieta
+
+## Explicación de las partes clave
+
+### cierre.cpp: Junta las planillas diarias (`comandas_dd-mm-aaaa.dat`) en una planilla semanal (`comandas_semana_sX-mm.dat`), ordenada por mozo.
+- Las fechas de la semana se piden al usuario (no se escanea la carpeta), por ser mas simple.
+- El ordenamiento se hace en memoria (burbujeo por `idMozo`), no sobre el archivo, por eficiencia para no acceder al disco en cada paso.
+- Semana y mes se calculan solos a partir de la primera fecha cargada: `semana = (día - 1) / 7 + 1`. 
+  
+### normalizacion.cpp
+### ventas.cpp
+### resumen.cpp
+
+
