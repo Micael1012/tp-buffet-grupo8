@@ -34,7 +34,7 @@ int main() {
 		}else{
 			Comanda c;
 		while(fread(&c,sizeof(Comanda),1,f) == 1){
-			cout<<c.idMozo<<" - "<<c.codigoProducto<<" - "<<c.cantidad<<c.comision<<endl;//Esto es para cuando pruebe ver que funciona, no forma parte
+			// cout<<c.idMozo<<" - "<<c.codigoProducto<<" - "<<c.cantidad<<c.comision<<endl; Esta linea es para cuando avnazaba ver que funciona, no forma parte.
 			todasLasComandas[totalComandas] = c;
 			totalComandas++;
 		}
@@ -53,7 +53,6 @@ int main() {
     }
 }
 
-    // ACÁ: armar el nombre del archivo semanal y escribirlo
     int dia, mes, anio;
     sscanf(primeraFecha, "%d-%d-%d", &dia, &mes, &anio);
     int semana = (dia - 1) / 7 + 1;
