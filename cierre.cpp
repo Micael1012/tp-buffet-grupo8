@@ -5,7 +5,7 @@
 
 using namespace std;
 
-const int MAX_COMANDAS = 1000; // ajustalo si hace falta
+const int MAX_COMANDAS = 1000; 
 
 int main() {
     Comanda todasLasComandas[MAX_COMANDAS];
@@ -34,7 +34,6 @@ int main() {
 		}else{
 			Comanda c;
 		while(fread(&c,sizeof(Comanda),1,f) == 1){
-			// cout<<c.idMozo<<" - "<<c.codigoProducto<<" - "<<c.cantidad<<c.comision<<endl; Esta linea es para cuando avnazaba ver que funciona, no forma parte.
 			todasLasComandas[totalComandas] = c;
 			totalComandas++;
 		}
