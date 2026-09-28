@@ -4,7 +4,7 @@
 
 using namespace std;
 
-const int K = 3;
+const int K = 5;
 
 struct Mozo {
     int id;
