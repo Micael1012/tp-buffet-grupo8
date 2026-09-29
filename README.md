@@ -102,6 +102,10 @@ Junta las planillas diarias (`comandas_dd-mm-aaaa.dat`) en una planilla semanal 
   
 ### normalizacion.cpp
 ### ventas.cpp
+El programa junta las planillas diarias ("comandas_dd-mm-aaaa.dat") en una planilla semanal ("comandas_semana_sX-mm.dat") y las ordena por "idMozo" mediante burbujeo en memoria.
+Las fechas de la semana se ingresan manualmente para evitar escanear la carpeta.
+La semana y el mes se calculan automáticamente a partir de la primera fecha ingresada.
+
 ### resumen.cpp
 
 
