@@ -5,7 +5,7 @@ unidad de **archivos binarios en C/C++**.
 
 > **Grupo: 8** 
 > **Integrantes: _(nombre — usuario de GitHub, uno por línea)
-  Micael Ventrici - Micael1012
+  Micael Ventrici Gonçalves - Micael1012
   Luca Gaston Liendro Torres - Luca022
   Santiago Luis Gamieta - Gamieta
   Estefania Aylen Mercado Segovia - AYLU
