@@ -1,36 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include "common.h"
 
 using namespace std;
 
-const int K = 5;
-
-struct Mozo {
-    int id;
-    char nombre[50];
-    char clave[20];
-    float comisionAcumulada;
-};
-
-struct Producto {
-    int codigo;
-    char descripcion[48];
-    float precio;
-    int stock;
-};
-
-struct Comanda {
-    int idMozo;
-    int codigoProducto;
-    int cantidad;
-    float comision;
-};
-
-void desencriptar(char texto[]) {
-    for (int i = 0; texto[i] != '\0'; i++) {
-        texto[i] -= K;
-    }
+void desencriptar(char* destino, const char* origen, int n) {
+    cifrarPassword(destino, origen, n, -K_CIFRADO);
 }
 
 bool validarMozo(int idBuscado, char claveIngresada[]) {
@@ -44,11 +20,10 @@ bool validarMozo(int idBuscado, char claveIngresada[]) {
     Mozo mozo;
 
     while (archivo.read(reinterpret_cast<char*>(&mozo), sizeof(Mozo))) {
-        if (mozo.id == idBuscado) {
+        if (mozo.idMozo == idBuscado) {
             char claveReal[20];
 
-            strcpy(claveReal, mozo.clave);
-            desencriptar(claveReal);
+            desencriptar(claveReal, mozo.password, sizeof(claveReal));
 
             archivo.close();
 
@@ -86,10 +61,10 @@ bool venderProducto(int codigoBuscado, int cantidad, float &precioProducto) {
     )) {
         if (producto.codigo == codigoBuscado) {
 
-            if (producto.stock < cantidad) {
+            if (producto.stockActual < cantidad) {
                 cout << "\nStock insuficiente.\n";
                 cout << "Stock disponible: "
-                     << producto.stock << endl;
+                     << producto.stockActual << endl;
 
                 archivo.close();
                 return false;
@@ -97,7 +72,7 @@ bool venderProducto(int codigoBuscado, int cantidad, float &precioProducto) {
 
             precioProducto = producto.precio;
 
-            producto.stock -= cantidad;
+            producto.stockActual -= cantidad;
 
             archivo.seekp(
                 -static_cast<streamoff>(sizeof(Producto)),
@@ -298,7 +273,7 @@ int main() {
         )) {
 
             float comision =
-                precio * cantidad * 0.10f;
+                precio * cantidad * TASA_COMISION;
 
             Comanda nuevaComanda;
 
