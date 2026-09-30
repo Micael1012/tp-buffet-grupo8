@@ -101,6 +101,13 @@ Junta las planillas diarias (`comandas_dd-mm-aaaa.dat`) en una planilla semanal 
 - Semana y mes se calculan solos a partir de la primera fecha cargada: `semana = (día - 1) / 7 + 1`. 
   
 ### normalizacion.cpp
+Arma la lista de mozos numerados a partir de las 30 ventas históricas (desordenadas) y separa las ventas en planillas por día, dejando el inventario actualizado.
+
+- La lista de mozos se arma con búsqueda lineal (todavía no hay nada ordenado por nombre), asignando un id correlativo a cada uno nuevo.
+- Las ventas de cada día se ordenan por `idMozo` con inserción, alcanza de sobra para el volumen que maneja el TP.
+- El stock se descuenta con búsqueda binaria sobre `inventario.dat`, que ya viene ordenado por código.
+- La clave inicial de cada mozo (su número) se guarda cifrada con corrimiento (K=5), nunca en texto plano.
+- Los `structs` (`Mozo`, `Producto`, `Comanda`, etc.) y la constante `K_CIFRADO` se centralizaron en `common.h`, para que los 4 programas compartan exactamente el mismo formato binario y no haya desajustes entre ellos.
 ### ventas.cpp
 El programa junta las planillas diarias ("comandas_dd-mm-aaaa.dat") en una planilla semanal ("comandas_semana_sX-mm.dat") y las ordena por "idMozo" mediante burbujeo en memoria.
 Las fechas de la semana se ingresan manualmente para evitar escanear la carpeta.
