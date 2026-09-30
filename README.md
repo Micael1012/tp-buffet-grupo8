@@ -115,4 +115,11 @@ La semana y el mes se calculan automáticamente a partir de la primera fecha ing
 
 ### resumen.cpp
 
+**resumen.cpp:**
 
+Lee la planilla semanal (`comandas_semana_sX-mm.dat`) y muestra, agrupado por mozo, la cantidad vendida y la comisión a pagar, más el total del buffet.
+
+- El nombre del archivo se arma pidiendo al usuario el número de semana y el mes, y concatenándolos con el formato `comandas_semana_sX-mm.dat`.
+- Cada mozo se busca o se crea en un array fijo de resúmenes (`MAX_MOZOS`) a medida que se van leyendo las ventas: si el mozo ya tiene una entrada, se le suma la cantidad y la comisión de esa venta; si no, se crea una entrada nueva.
+- El nombre de cada mozo se busca en `mozos.dat` recorriéndolo con `rewind` solo la primera vez que ese mozo aparece en la semana, no en cada venta.
+- Mientras se recorre la planilla, se van acumulando también el total de unidades vendidas y la comisión total del buffet, para mostrarlos al final junto con el detalle por mozo.
