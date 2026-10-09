@@ -53,8 +53,8 @@ int main() {
     }
 }
 
-    int dia, mes, anio;
-    sscanf(primeraFecha, "%d-%d-%d", &dia, &mes, &anio);
+    int dia = (primeraFecha[0] - '0') * 10 + (primeraFecha[1] - '0');
+    int mes = (primeraFecha[3] - '0') * 10 + (primeraFecha[4] - '0');
     int semana = (dia - 1) / 7 + 1;
     char nombreSemanal[50];
     sprintf(nombreSemanal, "comandas_semana_s%d-%02d.dat", semana, mes);
