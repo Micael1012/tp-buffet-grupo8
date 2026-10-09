@@ -1,33 +1,51 @@
 #include <iostream>
-#include <fstream>
+#include <cstdio>
 #include <cstring>
 #include "common.h"
 
 using namespace std;
 
-void desencriptar(char* destino, const char* origen, int n) {
+// ---------------------------------------------------------
+// DESENCRIPTAR
+// ---------------------------------------------------------
+void desencriptar(char* destino, const char* origen, int n)
+{
     cifrarPassword(destino, origen, n, -K_CIFRADO);
 }
 
-bool validarMozo(int idBuscado, char claveIngresada[]) {
-    ifstream archivo("mozos.dat", ios::binary);
+// ---------------------------------------------------------
+// VALIDAR MOZO
+// Archivo: mozos.dat
+// Modo: rb -> solo lectura
+// ---------------------------------------------------------
+bool validarMozo(int idBuscado, char claveIngresada[])
+{
+    FILE* archivo = fopen("mozos.dat", "rb");
 
-    if (!archivo) {
+    if (archivo == NULL)
+    {
         cout << "\nERROR: No se pudo abrir mozos.dat\n";
         return false;
     }
 
     Mozo mozo;
 
-    while (archivo.read(reinterpret_cast<char*>(&mozo), sizeof(Mozo))) {
-        if (mozo.idMozo == idBuscado) {
+    while (fread(&mozo, sizeof(Mozo), 1, archivo) == 1)
+    {
+        if (mozo.idMozo == idBuscado)
+        {
             char claveReal[20];
 
-            desencriptar(claveReal, mozo.password, sizeof(claveReal));
+            desencriptar(
+                claveReal,
+                mozo.password,
+                sizeof(claveReal)
+            );
 
-            archivo.close();
+            fclose(archivo);
 
-            if (strcmp(claveReal, claveIngresada) == 0) {
+            if (strcmp(claveReal, claveIngresada) == 0)
+            {
                 return true;
             }
 
@@ -36,156 +54,176 @@ bool validarMozo(int idBuscado, char claveIngresada[]) {
         }
     }
 
-    archivo.close();
+    fclose(archivo);
 
     cout << "\nNo existe un mozo con ese ID.\n";
     return false;
 }
 
-bool venderProducto(int codigoBuscado, int cantidad, float &precioProducto) {
-    fstream archivo(
-        "inventario.dat",
-        ios::in | ios::out | ios::binary
-    );
+// ---------------------------------------------------------
+// VENDER PRODUCTO
+//
+// Archivo: inventario.dat
+// Modo: r+b -> lectura y escritura
+//
+// El inventario está ordenado por código, por lo que se
+// utiliza búsqueda binaria.
+// ---------------------------------------------------------
+bool venderProducto(
+    int codigoBuscado,
+    int cantidad,
+    float& precioProducto
+)
+{
+    FILE* archivo = fopen("inventario.dat", "r+b");
 
-    if (!archivo) {
+    if (archivo == NULL)
+    {
         cout << "\nERROR: No se pudo abrir inventario.dat\n";
         return false;
     }
 
     Producto producto;
 
-    while (archivo.read(
-        reinterpret_cast<char*>(&producto),
-        sizeof(Producto)
-    )) {
-        if (producto.codigo == codigoBuscado) {
+    // -----------------------------------------------------
+    // DETERMINAR CANTIDAD DE REGISTROS
+    // -----------------------------------------------------
+    fseek(archivo, 0, SEEK_END);
 
-            if (producto.stockActual < cantidad) {
-                cout << "\nStock insuficiente.\n";
-                cout << "Stock disponible: "
-                     << producto.stockActual << endl;
+    long cantidadRegistros =
+        ftell(archivo) / sizeof(Producto);
 
-                archivo.close();
-                return false;
-            }
+    long izquierda = 0;
+    long derecha = cantidadRegistros - 1;
 
-            precioProducto = producto.precio;
+    bool encontrado = false;
 
-            producto.stockActual -= cantidad;
+    // -----------------------------------------------------
+    // BUSQUEDA BINARIA
+    // -----------------------------------------------------
+    while (izquierda <= derecha)
+    {
+        long medio = (izquierda + derecha) / 2;
 
-            archivo.seekp(
-                -static_cast<streamoff>(sizeof(Producto)),
-                ios::cur
-            );
+        fseek(
+            archivo,
+            medio * sizeof(Producto),
+            SEEK_SET
+        );
 
-            archivo.write(
-                reinterpret_cast<char*>(&producto),
-                sizeof(Producto)
-            );
+        if (fread(&producto, sizeof(Producto), 1, archivo) != 1)
+        {
+            fclose(archivo);
+            return false;
+        }
 
-            archivo.close();
+        if (producto.codigo == codigoBuscado)
+        {
+            encontrado = true;
+            break;
+        }
 
-            return true;
+        if (producto.codigo < codigoBuscado)
+        {
+            izquierda = medio + 1;
+        }
+        else
+        {
+            derecha = medio - 1;
         }
     }
 
-    archivo.close();
+    // -----------------------------------------------------
+    // PRODUCTO NO ENCONTRADO
+    // -----------------------------------------------------
+    if (!encontrado)
+    {
+        cout << "\nProducto no encontrado.\n";
 
-    cout << "\nProducto no encontrado.\n";
-    return false;
+        fclose(archivo);
+        return false;
+    }
+
+    // -----------------------------------------------------
+    // CONTROL DE STOCK
+    // -----------------------------------------------------
+    if (producto.stockActual < cantidad)
+    {
+        cout << "\nStock insuficiente.\n";
+        cout << "Stock disponible: "
+             << producto.stockActual << endl;
+
+        fclose(archivo);
+        return false;
+    }
+
+    // Guardamos el precio antes de modificar.
+    precioProducto = producto.precio;
+
+    // Descontamos la cantidad vendida.
+    producto.stockActual -= cantidad;
+
+    // -----------------------------------------------------
+    // EDICION IN SITU
+    //
+    // fread dejó el puntero inmediatamente después del
+    // registro que acabamos de leer.
+    //
+    // Por eso retrocedemos sizeof(Producto) bytes para
+    // volver al comienzo del registro y sobrescribirlo.
+    // -----------------------------------------------------
+    fseek(
+        archivo,
+        -static_cast<long>(sizeof(Producto)),
+        SEEK_CUR
+    );
+
+    fwrite(
+        &producto,
+        sizeof(Producto),
+        1,
+        archivo
+    );
+
+    fclose(archivo);
+
+    return true;
 }
 
+// ---------------------------------------------------------
+// GUARDAR COMANDA
+//
+// Archivo: comandas_dd-mm-aaaa.dat
+// Modo: ab -> agrega al final y crea si no existe.
+// ---------------------------------------------------------
 void guardarComanda(
     const char nombreArchivo[],
     Comanda nuevaComanda
-) {
-    ofstream archivo(
-        nombreArchivo,
-        ios::binary | ios::app
-    );
+)
+{
+    FILE* archivo = fopen(nombreArchivo, "ab");
 
-    if (!archivo) {
+    if (archivo == NULL)
+    {
         cout << "\nERROR al abrir el archivo de comandas.\n";
         return;
     }
 
-    archivo.write(
-        reinterpret_cast<char*>(&nuevaComanda),
-        sizeof(Comanda)
+    fwrite(
+        &nuevaComanda,
+        sizeof(Comanda),
+        1,
+        archivo
     );
 
-    archivo.close();
+    fclose(archivo);
 }
 
-void ordenarComandas(const char nombreArchivo[]) {
-    fstream archivo(
-        nombreArchivo,
-        ios::in | ios::out | ios::binary
-    );
-
-    if (!archivo) {
-        return;
-    }
-
-    archivo.seekg(0, ios::end);
-
-    int cantidadRegistros =
-        static_cast<int>(archivo.tellg() / sizeof(Comanda));
-
-    for (int i = 0; i < cantidadRegistros - 1; i++) {
-        for (int j = 0; j < cantidadRegistros - i - 1; j++) {
-
-            Comanda c1;
-            Comanda c2;
-
-            streampos posicion1 =
-                static_cast<streampos>(j * sizeof(Comanda));
-
-            streampos posicion2 =
-                static_cast<streampos>((j + 1) * sizeof(Comanda));
-
-            archivo.clear();
-
-            archivo.seekg(posicion1);
-            archivo.read(
-                reinterpret_cast<char*>(&c1),
-                sizeof(Comanda)
-            );
-
-            archivo.clear();
-
-            archivo.seekg(posicion2);
-            archivo.read(
-                reinterpret_cast<char*>(&c2),
-                sizeof(Comanda)
-            );
-
-            if (c1.idMozo > c2.idMozo) {
-
-                archivo.clear();
-
-                archivo.seekp(posicion1);
-                archivo.write(
-                    reinterpret_cast<char*>(&c2),
-                    sizeof(Comanda)
-                );
-
-                archivo.clear();
-
-                archivo.seekp(posicion2);
-                archivo.write(
-                    reinterpret_cast<char*>(&c1),
-                    sizeof(Comanda)
-                );
-            }
-        }
-    }
-
-    archivo.close();
-}
-
-int main() {
+// ---------------------------------------------------------
+// MAIN
+// ---------------------------------------------------------
+int main()
+{
     char fecha[20];
 
     cout << "=====================================\n";
@@ -196,6 +234,9 @@ int main() {
     cout << "Ingrese la fecha (dd-mm-aaaa): ";
     cin.getline(fecha, 20);
 
+    // -----------------------------------------------------
+    // ARMAR NOMBRE DEL ARCHIVO DEL DIA
+    // -----------------------------------------------------
     char nombreArchivo[50];
 
     strcpy(nombreArchivo, "comandas_");
@@ -204,40 +245,54 @@ int main() {
 
     char continuar = 'S';
 
-    while (continuar == 'S' || continuar == 's') {
-
+    // -----------------------------------------------------
+    // CARGA DE VENTAS
+    // -----------------------------------------------------
+    while (continuar == 'S' || continuar == 's')
+    {
         int idMozo;
         char clave[20];
 
         cout << "\n----- NUEVA VENTA -----\n";
 
+        // -------------------------------------------------
+        // VALIDAR MOZO
+        // -------------------------------------------------
         bool mozoValido = false;
 
-        while (!mozoValido) {
-
+        while (!mozoValido)
+        {
             cout << "Ingrese ID del mozo: ";
             cin >> idMozo;
 
             cout << "Ingrese clave: ";
             cin >> clave;
 
-            mozoValido =
-                validarMozo(idMozo, clave);
+            mozoValido = validarMozo(
+                idMozo,
+                clave
+            );
 
-            if (!mozoValido) {
+            if (!mozoValido)
+            {
                 char intentar;
 
                 cout << "¿Intentar nuevamente? (S/N): ";
                 cin >> intentar;
 
-                if (intentar != 'S' && intentar != 's') {
+                if (intentar != 'S' &&
+                    intentar != 's')
+                {
                     break;
                 }
             }
         }
 
-        if (!mozoValido) {
-
+        // -------------------------------------------------
+        // SI EL MOZO NO ES VALIDO
+        // -------------------------------------------------
+        if (!mozoValido)
+        {
             cout << "\nVenta cancelada.\n";
 
             cout << "\n¿Desea cargar otra venta? (S/N): ";
@@ -246,6 +301,9 @@ int main() {
             continue;
         }
 
+        // -------------------------------------------------
+        // INGRESAR PRODUCTO
+        // -------------------------------------------------
         int codigoProducto;
         int cantidad;
         float precio;
@@ -256,8 +314,11 @@ int main() {
         cout << "Ingrese cantidad: ";
         cin >> cantidad;
 
-        if (cantidad <= 0) {
-
+        // -------------------------------------------------
+        // VALIDAR CANTIDAD
+        // -------------------------------------------------
+        if (cantidad <= 0)
+        {
             cout << "\nLa cantidad debe ser mayor a cero.\n";
 
             cout << "\n¿Desea cargar otra venta? (S/N): ";
@@ -266,12 +327,14 @@ int main() {
             continue;
         }
 
+        // -------------------------------------------------
+        // ACTUALIZAR STOCK Y REGISTRAR VENTA
+        // -------------------------------------------------
         if (venderProducto(
-            codigoProducto,
-            cantidad,
-            precio
-        )) {
-
+                codigoProducto,
+                cantidad,
+                precio))
+        {
             float comision =
                 precio * cantidad * TASA_COMISION;
 
@@ -299,14 +362,14 @@ int main() {
                  << comision << endl;
         }
 
+        // -------------------------------------------------
+        // CONTINUAR
+        // -------------------------------------------------
         cout << "\n¿Desea cargar otra venta? (S/N): ";
         cin >> continuar;
     }
 
-    ordenarComandas(nombreArchivo);
-
-    cout << "\nComandas ordenadas por mozo.\n";
-    cout << "Fin del programa.\n";
+    cout << "\nFin del programa.\n";
 
     return 0;
 }
