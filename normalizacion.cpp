@@ -1,14 +1,18 @@
+#include <iostream>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
-#include <string>
-#include <vector>
 #include "common.h"
 
 using namespace std;
 
-int buscarProductoPorCodigo(vector<Producto>& productos, int codigo) {
-    int izq = 0, der = (int)productos.size() - 1;
+const int MAX_PRODUCTOS  = 100;
+const int MAX_HISTORICAS = 1000;
+const int MAX_MOZOS      = 100;
+const int MAX_FECHAS     = 100;
+const int MAX_VENTAS_DIA = 1000;
+
+int buscarProductoPorCodigo(Producto productos[], int cantProductos, int codigo) {
+    int izq = 0, der = cantProductos - 1;
     while (izq <= der) {
         int medio = (izq + der) / 2;
         if (productos[medio].codigo == codigo) return medio;
@@ -17,84 +21,118 @@ int buscarProductoPorCodigo(vector<Producto>& productos, int codigo) {
     }
     return -1;
 }
-int buscarMozoPorNombre(vector<Mozo>& mozos, const char* nombre) {
-    for (size_t i = 0; i < mozos.size(); i++) {
-        if (strcmp(mozos[i].nombre, nombre) == 0) return (int)i;
+
+int buscarMozoPorNombre(Mozo mozos[], int cantMozos, const char nombre[]) {
+    for (int i = 0; i < cantMozos; i++) {
+        if (strcmp(mozos[i].nombre, nombre) == 0) return i;
     }
     return -1;
 }
 
+int buscarFecha(char fechas[][11], int cantFechas, const char fecha[]) {
+    for (int i = 0; i < cantFechas; i++) {
+        if (strcmp(fechas[i], fecha) == 0) return i;
+    }
+    return -1;
+}
+
+void numeroATexto(int n, char texto[]) {
+    char invertido[12];
+    int largo = 0;
+    do {
+        invertido[largo] = '0' + n % 10;
+        largo++;
+        n = n / 10;
+    } while (n > 0);
+    for (int i = 0; i < largo; i++) {
+        texto[i] = invertido[largo - 1 - i];
+    }
+    texto[largo] = '\0';
+}
+
 int main() {
+    Producto productos[MAX_PRODUCTOS];
+    int cantProductos = 0;
+
     FILE* fInv = fopen("inventario.dat", "rb");
-    if (!fInv) { printf("No se pudo abrir inventario.dat\n"); return 1; }
-    vector<Producto> productos;
-    Producto p;
-    while (fread(&p, sizeof(Producto), 1, fInv) == 1) productos.push_back(p);
+    if (fInv == NULL) { cout << "No se pudo abrir inventario.dat" << endl; return 1; }
+    while (fread(&productos[cantProductos], sizeof(Producto), 1, fInv) == 1) {
+        cantProductos++;
+    }
     fclose(fInv);
 
+    ComandaHistorica historicas[MAX_HISTORICAS];
+    int cantHistoricas = 0;
+
     FILE* fHist = fopen("comandas_historicas.dat", "rb");
-    if (!fHist) { printf("No se pudo abrir comandas_historicas.dat\n"); return 1; }
-    vector<ComandaHistorica> historicas;
-    ComandaHistorica c;
-    while (fread(&c, sizeof(ComandaHistorica), 1, fHist) == 1) historicas.push_back(c);
+    if (fHist == NULL) { cout << "No se pudo abrir comandas_historicas.dat" << endl; return 1; }
+    while (fread(&historicas[cantHistoricas], sizeof(ComandaHistorica), 1, fHist) == 1) {
+        cantHistoricas++;
+    }
     fclose(fHist);
 
-    printf("Leidos %d productos y %d ventas historicas.\n",
-           (int)productos.size(), (int)historicas.size());
-    printf("sizeof(ComandaHistorica)=%d  sizeof(Producto)=%d\n",
-           (int)sizeof(ComandaHistorica), (int)sizeof(Producto));
+    cout << "Leidos " << cantProductos << " productos y "
+         << cantHistoricas << " ventas historicas." << endl;
+    cout << "sizeof(ComandaHistorica)=" << sizeof(ComandaHistorica)
+         << "  sizeof(Producto)=" << sizeof(Producto) << endl;
 
-    vector<Mozo> mozos;
-    for (size_t i = 0; i < historicas.size(); i++) {
-        int idx = buscarMozoPorNombre(mozos, historicas[i].nombreMozo);
+    Mozo mozos[MAX_MOZOS];
+    int cantMozos = 0;
+
+    for (int i = 0; i < cantHistoricas; i++) {
+        int idx = buscarMozoPorNombre(mozos, cantMozos, historicas[i].nombreMozo);
         if (idx == -1) {
-            Mozo m;
-            m.idMozo = (int)mozos.size() + 1;
-            strncpy(m.nombre, historicas[i].nombreMozo, sizeof(m.nombre));
-            m.nombre[sizeof(m.nombre) - 1] = '\0';
+            mozos[cantMozos].idMozo = cantMozos + 1;
+            strncpy(mozos[cantMozos].nombre, historicas[i].nombreMozo, sizeof(mozos[cantMozos].nombre));
+            mozos[cantMozos].nombre[sizeof(mozos[cantMozos].nombre) - 1] = '\0';
 
             char claveInicial[20];
-            snprintf(claveInicial, sizeof(claveInicial), "%d", m.idMozo);
-            cifrarPassword(m.password, claveInicial, sizeof(m.password), K_CIFRADO);
+            numeroATexto(mozos[cantMozos].idMozo, claveInicial);
+            cifrarPassword(mozos[cantMozos].password, claveInicial,
+                           sizeof(mozos[cantMozos].password), K_CIFRADO);
 
-            m.totalComision = historicas[i].comision;
-            mozos.push_back(m);
+            mozos[cantMozos].totalComision = historicas[i].comision;
+            cantMozos++;
         } else {
             mozos[idx].totalComision += historicas[i].comision;
         }
     }
 
     FILE* fMozos = fopen("mozos.dat", "wb");
-    for (size_t i = 0; i < mozos.size(); i++) fwrite(&mozos[i], sizeof(Mozo), 1, fMozos);
+    for (int i = 0; i < cantMozos; i++) {
+        fwrite(&mozos[i], sizeof(Mozo), 1, fMozos);
+    }
     fclose(fMozos);
-    printf("mozos.dat generado con %d mozos.\n", (int)mozos.size());
-    vector<string> fechas;
-    for (size_t i = 0; i < historicas.size(); i++) {
-        string f(historicas[i].fecha);
-        bool existe = false;
-        for (size_t j = 0; j < fechas.size(); j++) {
-            if (fechas[j] == f) { existe = true; break; }
+    cout << "mozos.dat generado con " << cantMozos << " mozos." << endl;
+
+    char fechas[MAX_FECHAS][11];
+    int cantFechas = 0;
+
+    for (int i = 0; i < cantHistoricas; i++) {
+        if (buscarFecha(fechas, cantFechas, historicas[i].fecha) == -1) {
+            strcpy(fechas[cantFechas], historicas[i].fecha);
+            cantFechas++;
         }
-        if (!existe) fechas.push_back(f);
     }
 
-    for (size_t d = 0; d < fechas.size(); d++) {
-        vector<Comanda> ventasDelDia;
-        for (size_t i = 0; i < historicas.size(); i++) {
-            if (fechas[d] == historicas[i].fecha) {
-                int idxMozo = buscarMozoPorNombre(mozos, historicas[i].nombreMozo);
-                Comanda cm;
-                cm.idMozo = mozos[idxMozo].idMozo;
-                cm.codigoProducto = historicas[i].codigoProducto;
-                cm.cantidad = historicas[i].cantidad;
-                cm.comision = historicas[i].comision;
-                ventasDelDia.push_back(cm);
+    for (int d = 0; d < cantFechas; d++) {
+        Comanda ventasDelDia[MAX_VENTAS_DIA];
+        int cantVentas = 0;
+
+        for (int i = 0; i < cantHistoricas; i++) {
+            if (strcmp(fechas[d], historicas[i].fecha) == 0) {
+                int idxMozo = buscarMozoPorNombre(mozos, cantMozos, historicas[i].nombreMozo);
+                ventasDelDia[cantVentas].idMozo = mozos[idxMozo].idMozo;
+                ventasDelDia[cantVentas].codigoProducto = historicas[i].codigoProducto;
+                ventasDelDia[cantVentas].cantidad = historicas[i].cantidad;
+                ventasDelDia[cantVentas].comision = historicas[i].comision;
+                cantVentas++;
             }
         }
 
-        for (size_t i = 1; i < ventasDelDia.size(); i++) {
+        for (int i = 1; i < cantVentas; i++) {
             Comanda actual = ventasDelDia[i];
-            int j = (int)i - 1;
+            int j = i - 1;
             while (j >= 0 && ventasDelDia[j].idMozo > actual.idMozo) {
                 ventasDelDia[j + 1] = ventasDelDia[j];
                 j--;
@@ -103,24 +141,34 @@ int main() {
         }
 
         char nombreArchivo[64];
-        snprintf(nombreArchivo, sizeof(nombreArchivo), "comandas_%s.dat", fechas[d].c_str());
+        strcpy(nombreArchivo, "comandas_");
+        strcat(nombreArchivo, fechas[d]);
+        strcat(nombreArchivo, ".dat");
+
         FILE* fDia = fopen(nombreArchivo, "wb");
-        for (size_t i = 0; i < ventasDelDia.size(); i++) fwrite(&ventasDelDia[i], sizeof(Comanda), 1, fDia);
+        for (int i = 0; i < cantVentas; i++) {
+            fwrite(&ventasDelDia[i], sizeof(Comanda), 1, fDia);
+        }
         fclose(fDia);
-        printf("%s generado con %d ventas.\n", nombreArchivo, (int)ventasDelDia.size());
+        cout << nombreArchivo << " generado con " << cantVentas << " ventas." << endl;
     }
 
-    for (size_t i = 0; i < historicas.size(); i++) {
-        int idxProd = buscarProductoPorCodigo(productos, historicas[i].codigoProducto);
-        if (idxProd != -1) productos[idxProd].stockActual -= historicas[i].cantidad;
-        else printf("AVISO: la venta historica tiene un codigo de producto inexistente (%d)\n",
-                     historicas[i].codigoProducto);
+    for (int i = 0; i < cantHistoricas; i++) {
+        int idxProd = buscarProductoPorCodigo(productos, cantProductos, historicas[i].codigoProducto);
+        if (idxProd != -1) {
+            productos[idxProd].stockActual -= historicas[i].cantidad;
+        } else {
+            cout << "AVISO: la venta historica tiene un codigo de producto inexistente ("
+                 << historicas[i].codigoProducto << ")" << endl;
+        }
     }
 
     FILE* fInvOut = fopen("inventario.dat", "wb");
-    for (size_t i = 0; i < productos.size(); i++) fwrite(&productos[i], sizeof(Producto), 1, fInvOut);
+    for (int i = 0; i < cantProductos; i++) {
+        fwrite(&productos[i], sizeof(Producto), 1, fInvOut);
+    }
     fclose(fInvOut);
-    printf("inventario.dat actualizado con el stock al dia.\n");
+    cout << "inventario.dat actualizado con el stock al dia." << endl;
 
     return 0;
 }
