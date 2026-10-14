@@ -2,24 +2,12 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
-
+#include <iomanip>
+#include "common.h"
 
 using namespace std;
 
-struct Mozo {
-    int idMozo;
-    char nombre[50];
-    char password[20];
-    float totalComision;
-};
-
-struct Comanda {
-    int idMozo;
-    int codigoProducto;
-    int cantidad;
-    float comision;
-};
-
+// Busca el nombre del mozo en mozos.dat por su ID
 int buscarNombreMozo(FILE *archivoMozos, int idBuscado, char nombreEncontrado[]) {
     struct Mozo mozo;
 
@@ -84,7 +72,7 @@ int main() {
     cout << "\nPlanilla: " << nombreArchivo << "\n";
     cout << "----------------------------------------\n";
 
-
+  
     leido = fread(&c, sizeof(struct Comanda), 1, archivoComandas); // lectura anticipada
 
     if (leido == 0) {
@@ -132,4 +120,3 @@ int main() {
 
     return 0;
 }
-
