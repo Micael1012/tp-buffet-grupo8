@@ -7,7 +7,9 @@
 
 using namespace std;
 
-// Busca el nombre del mozo en mozos.dat por su ID
+// ----------------------------------------------------------------------------------------
+
+// Busca el nombre del mozo en mozos.dat por su ID 
 int buscarNombreMozo(FILE *archivoMozos, int idBuscado, char nombreEncontrado[]) {
     struct Mozo mozo;
 
@@ -22,6 +24,8 @@ int buscarNombreMozo(FILE *archivoMozos, int idBuscado, char nombreEncontrado[])
 
     return 0;
 }
+
+// ----------------------------------------------------------------------------------------
 
 int main() {
 
@@ -38,8 +42,12 @@ int main() {
     int totalBuffetCantidad = 0;
     float totalBuffetComision = 0.0f;
 
+// ----------------------------------------------------------------------------------------
+
+// Pide al usuario número de semana y mes para abrir el archivo correcto
+    
     cout << "========================================\n";
-    cout << "      RESUMEN DE CIERRE SEMANAL\n";
+    cout << "      RESUMEN DE CIERRE SEMANAL\n";                                
     cout << "========================================\n\n";
 
     cout << "Ingrese el numero de semana (ej: 1): S";
@@ -47,12 +55,18 @@ int main() {
 
     cout << "Ingrese el mes (dos digitos, ej: 06): ";
     cin >> setw(3) >> mes;
+// ----------------------------------------------------------------------------------------
+    //arma el nombre del archivo
 
     strcpy(nombreArchivo, "comandas_semana_s");
     strcat(nombreArchivo, numeroSemana);
     strcat(nombreArchivo, "-");
     strcat(nombreArchivo, mes);
     strcat(nombreArchivo, ".dat");
+
+// ----------------------------------------------------------------------------------------
+
+// Abre los archivos
 
     archivoComandas = fopen(nombreArchivo, "rb");
 
@@ -68,13 +82,18 @@ int main() {
         fclose(archivoComandas);
         return 1;
     }
-
+// ----------------------------------------------------------------------------------------
+    //Muestra el nombre del archivo
     cout << "\nPlanilla: " << nombreArchivo << "\n";
     cout << "----------------------------------------\n";
-
-  
-    leido = fread(&c, sizeof(struct Comanda), 1, archivoComandas); // lectura anticipada
-
+    
+// ----------------------------------------------------------------------------------------
+    
+  // lectura anticipada
+    leido = fread(&c, sizeof(struct Comanda), 1, archivoComandas); 
+    
+// ----------------------------------------------------------------------------------------
+    //ciclo grande
     if (leido == 0) {
         cout << "No hay ventas registradas en esta semana.\n";
         fclose(archivoComandas);
@@ -91,13 +110,14 @@ int main() {
         if (!buscarNombreMozo(archivoMozos, idGrupo, nombreMozo)) {
             strcpy(nombreMozo, "(mozo desconocido)");
         }
-
+// ----------------------------------------------------------------------------------------
+        //ciclo chico
         while (leido == 1 && c.idMozo == idGrupo) {
             cantidadGrupo += c.cantidad;
             comisionGrupo += c.comision;
             leido = fread(&c, sizeof(struct Comanda), 1, archivoComandas);
         }
-
+        
         cout << "\nMozo #" << idGrupo << " - " << nombreMozo << "\n";
         cout << "  Productos vendidos: " << cantidadGrupo << "\n";
         cout << "  Comision a pagar:   $" << comisionGrupo << "\n";
@@ -109,7 +129,8 @@ int main() {
             cout << "----------------------------------------\n";
         }
     }
-
+// ----------------------------------------------------------------------------------------
+    //cierra los archivos y muestra los totales 
     fclose(archivoComandas);
     fclose(archivoMozos);
 
